@@ -21,14 +21,16 @@ def main(page: ft.Page):
     def selecionar_moeda(e):
         moeda = dropdown_moedas.value
         if moeda:
-            link = f"https://economia.awesomeapi.com.br/json/last/{moeda}-BRL"
+            #Alterei para incluir todas as moedas e não converter somente para BRL
+            link = f"https://economia.awesomeapi.com.br/json/last/{moeda}"
             try:
                 dados = api.get(link)
                 if dados.status_code == 200:
                     data = dados.json()
                     moeda_key = list(data.keys())[0]
                     valor = data[moeda_key]['bid']
-                    label.value = f"1 {moeda} = {float(valor):.4f} BRL"
+                    #Aparecer todo tipo de conversão, sem estar presso no BRL(real) - Liandro
+                    label.value = f"1 {moeda} = {valor} {moeda.split("-")[1]}"
                 else:
                     label.value = "Erro ao obter cotação"
             except Exception as ex:
