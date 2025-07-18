@@ -1,0 +1,129 @@
+import flet as ft
+import requests
+import datetime
+import matplotlib.pyplot as plt
+import os
+
+#mn eu acho q nem preciso comentar né . ..  é a porra da lista de moedas
+LISTA_MOEDAS = ['AED-BRL', 'AED-EUR', 'AED-USD', 'AFN-USD', 'ANG-USD', 'ARS-BRL', 'ARS-CLP', 'ARS-EUR', 'ARS-PEN', 'ARS-USD', 'AUD-BRL', 'AUD-BRLPTAX', 'AUD-CHF', 'AUD-EUR', 'AUD-JPY', 'AUD-NZD', 'AUD-USD', 'BHD-EUR', 'BNB-BRL', 'BNB-EUR', 'BNB-USD', 'BOB-BRL', 'BOB-USD', 'BRETT-BRL', 'BRETT-EUR', 'BRETT-USD', 'BRL-AED', 'BRL-ARS', 'BRL-AUD', 'BRL-BBD', 'BRL-BHD', 'BRL-BOB', 'BRL-CAD', 'BRL-CHF', 'BRL-CLP', 'BRL-CNY', 'BRL-COP', 'BRL-CRC', 'BRL-CZK', 'BRL-DKK', 'BRL-EGP', 'BRL-EUR', 'BRL-GBP', 'BRL-HKD', 'BRL-HUF', 'BRL-IDR', 'BRL-ILS', 'BRL-INR', 'BRL-ISK', 'BRL-JMD', 'BRL-JOD', 'BRL-JPY', 'BRL-KES', 'BRL-KRW', 'BRL-LBP', 'BRL-LKR', 'BRL-MAD', 'BRL-MXN', 'BRL-MYR', 'BRL-NAD', 'BRL-NOK', 'BRL-NPR', 'BRL-NZD', 'BRL-OMR', 'BRL-PAB', 'BRL-PEN', 'BRL-PHP', 'BRL-PKR', 'BRL-PLN', 'BRL-PYG', 'BRL-QAR', 'BRL-RON', 'BRL-RSD', 'BRL-RUB', 'BRL-SAR', 'BRL-SEK', 'BRL-SGD', 'BRL-THB', 'BRL-TRY', 'BRL-TWD', 'BRL-USD', 'BRL-UYU', 'BRL-VEF', 'BRL-XAF', 'BRL-XAG', 'BRL-XAU', 'BRL-XCD', 'BRL-XOF', 'BRL-ZAR', 'BTC-BRL', 'BTC-EUR', 'BTC-USD', 'BYN-EUR', 'BYN-USD', 'CAD-BRL', 'CAD-BRLPTAX', 'CAD-EUR', 'CAD-JPY', 'CAD-UAH', 'CAD-USD', 'CHF-BRL', 'CHF-BRLPTAX', 'CHF-EUR', 'CHF-JPY', 'CHF-USD', 'CLP-BOB', 'CLP-BRL', 'CLP-COP', 'CLP-EUR', 'CLP-USD', 'CNY-BRL', 'CNY-EUR', 'CNY-JPY', 'CNY-USD', 'COP-BRL', 'COP-CLP', 'COP-USD', 'CRC-BRL', 'CRC-USD', 'CZK-BRL', 'CZK-USD', 'DKK-BRL', 'DKK-BRLPTAX', 'DKK-EUR', 'DKK-USD', 'DOGE-BRL', 'DOGE-EUR', 'DOGE-USD', 'EGP-BRL', 'EGP-EUR', 'EGP-USD', 'ETH-BRL', 'ETH-EUR', 'ETH-USD', 'EUR-AED', 'EUR-AFN', 'EUR-ALL', 'EUR-AMD', 'EUR-ANG', 'EUR-AOA', 'EUR-ARS', 'EUR-AUD', 'EUR-AZN', 'EUR-BAM', 'EUR-BBD', 'EUR-BDT', 'EUR-BGN', 'EUR-BHD', 'EUR-BIF', 'EUR-BND', 'EUR-BOB', 'EUR-BRL', 'EUR-BRLPTAX', 'EUR-BRLT', 'EUR-BSD', 'EUR-BWP', 'EUR-BYN', 'EUR-BZD', 'EUR-CAD', 'EUR-CHF', 'EUR-CLP', 'EUR-CNY', 'EUR-COP', 'EUR-CRC', 'EUR-CUP', 'EUR-CVE', 'EUR-CZK', 'EUR-DJF', 'EUR-DKK', 'EUR-DOP', 'EUR-DZD', 'EUR-EGP', 'EUR-ETB', 'EUR-FJD', 'EUR-GBP', 'EUR-GEL', 'EUR-GHS', 'EUR-GMD', 'EUR-GNF', 'EUR-GTQ', 'EUR-HKD', 'EUR-HNL', 'EUR-HRK', 'EUR-HTG', 'EUR-HUF', 'EUR-IDR', 'EUR-ILS', 'EUR-INR', 'EUR-IQD', 'EUR-IRR', 'EUR-ISK', 'EUR-JMD', 'EUR-JOD', 'EUR-JPY', 'EUR-KES', 'EUR-KHR', 'EUR-KRW', 'EUR-KWD', 'EUR-KYD', 'EUR-KZT', 'EUR-LAK', 'EUR-LBP', 'EUR-LKR', 'EUR-LSL', 'EUR-LYD', 'EUR-MAD', 'EUR-MDL', 'EUR-MGA', 'EUR-MKD', 'EUR-MMK', 'EUR-MOP', 'EUR-MRO', 'EUR-MUR', 'EUR-MWK', 'EUR-MXN', 'EUR-MYR', 'EUR-MZN', 'EUR-NAD', 'EUR-NGN', 'EUR-NIO', 'EUR-NOK', 'EUR-NPR', 'EUR-NZD', 'EUR-OMR', 'EUR-PAB', 'EUR-PEN', 'EUR-PGK', 'EUR-PHP', 'EUR-PKR', 'EUR-PLN', 'EUR-PYG', 'EUR-QAR', 'EUR-RON', 'EUR-RSD', 'EUR-RUB', 'EUR-RWF', 'EUR-SAR', 'EUR-SCR', 'EUR-SDG', 'EUR-SDR', 'EUR-SEK', 'EUR-SGD', 'EUR-SOS', 'EUR-STD', 'EUR-SVC', 'EUR-SYP', 'EUR-SZL', 'EUR-THB', 'EUR-TJS', 'EUR-TND', 'EUR-TRY', 'EUR-TTD', 'EUR-TWD', 'EUR-TZS', 'EUR-UAH', 'EUR-UGX', 'EUR-USD', 'EUR-UYU', 'EUR-UZS', 'EUR-VEF', 'EUR-VND', 'EUR-XAF', 'EUR-XCD', 'EUR-XOF', 'EUR-XPF', 'EUR-ZAR', 'EUR-ZMK', 'FJD-USD', 'GBP-AUD', 'GBP-BRL', 'GBP-BRLPTAX', 'GBP-CHF', 'GBP-EUR', 'GBP-JPY', 'GBP-USD', 'GBP-XCD', 'GBP-ZAR', 'GEL-EUR', 'GHS-EUR', 'GHS-USD', 'HKD-BRL', 'HKD-EUR', 'HKD-USD', 'HUF-BRL', 'HUF-EUR', 'HUF-USD', 'IDR-EUR', 'IDR-USD', 'ILS-BRL', 'ILS-EUR', 'ILS-NZD', 'ILS-USD', 'INR-BRL', 'INR-EUR', 'INR-USD', 'IQD-USD', 'IRR-USD', 'JOD-EUR', 'JOD-USD', 'JPY-BRL', 'JPY-BRLPTAX', 'JPY-EUR', 'JPY-USD', 'KES-BRL', 'KES-USD', 'KRW-BRL', 'KRW-EUR', 'KRW-USD', 'KWD-EUR', 'KWD-USD', 'KYD-USD', 'LTC-BRL', 'LTC-EUR', 'LTC-USD', 'MAD-EUR', 'MXN-BRL', 'MXN-EUR', 'MXN-USD', 'MXN-XCD', 'MYR-USD', 'NIO-USD', 'NOK-BRL', 'NOK-BRLPTAX', 'NOK-EUR', 'NOK-USD', 'NZD-BRL', 'NZD-EUR', 'NZD-ILS', 'NZD-JPY', 'NZD-USD', 'PEN-BRL', 'PEN-EUR', 'PEN-USD', 'PHP-BRL', 'PHP-USD', 'PLN-BRL', 'PLN-EUR', 'PLN-USD', 'PYG-ARS', 'PYG-BRL', 'PYG-EUR', 'PYG-USD', 'RON-BRL', 'RON-USD', 'RSD-BRL', 'RUB-BRL', 'RUB-EUR', 'RUB-USD', 'SAR-BRL', 'SAR-EUR', 'SAR-USD', 'SDG-USD', 'SEK-BRL', 'SEK-BRLPTAX', 'SEK-EUR', 'SEK-USD', 'SGD-BRL', 'SGD-EUR', 'SGD-USD', 'SOL-BRL', 'SOL-EUR', 'SOL-USD', 'SYP-USD', 'THB-BRL', 'THB-USD', 'TRY-BRL', 'TRY-EUR', 'TRY-USD', 'TWD-BRL', 'TWD-EUR', 'TWD-USD', 'UAH-USD', 'USD-AED', 'USD-AFN', 'USD-ALL', 'USD-AMD', 'USD-ANG', 'USD-AOA', 'USD-ARS', 'USD-AUD', 'USD-AZN', 'USD-BBD', 'USD-BDT', 'USD-BGN', 'USD-BHD', 'USD-BIF', 'USD-BND', 'USD-BOB', 'USD-BRL', 'USD-BRLPTAX', 'USD-BRLT', 'USD-BSD', 'USD-BWP', 'USD-BYN', 'USD-BZD', 'USD-CAD', 'USD-CHF', 'USD-CLP', 'USD-CNH', 'USD-CNY', 'USD-COP', 'USD-CRC', 'USD-CUP', 'USD-CZK', 'USD-DJF', 'USD-DKK', 'USD-DOP', 'USD-DZD', 'USD-EGP', 'USD-ETB', 'USD-EUR', 'USD-FJD', 'USD-GBP', 'USD-GEL', 'USD-GHS', 'USD-GMD', 'USD-GNF', 'USD-GTQ', 'USD-HKD', 'USD-HNL', 'USD-HRK', 'USD-HTG', 'USD-HUF', 'USD-IDR', 'USD-ILS', 'USD-INR', 'USD-IQD', 'USD-IRR', 'USD-ISK', 'USD-JMD', 'USD-JOD', 'USD-JPY', 'USD-KES', 'USD-KGS', 'USD-KHR', 'USD-KMF', 'USD-KRW', 'USD-KWD', 'USD-KYD', 'USD-KZT', 'USD-LAK', 'USD-LBP', 'USD-LKR', 'USD-LSL', 'USD-LYD', 'USD-MAD', 'USD-MDL', 'USD-MGA', 'USD-MKD', 'USD-MMK', 'USD-MNT', 'USD-MOP', 'USD-MRO', 'USD-MUR', 'USD-MVR', 'USD-MWK', 'USD-MXN', 'USD-MYR', 'USD-MZN', 'USD-NAD', 'USD-NGN', 'USD-NGNI', 'USD-NIO', 'USD-NOK', 'USD-NPR', 'USD-NZD', 'USD-OMR', 'USD-PAB', 'USD-PEN', 'USD-PGK', 'USD-PHP', 'USD-PKR', 'USD-PLN', 'USD-PYG', 'USD-QAR', 'USD-RON', 'USD-RSD', 'USD-RUB', 'USD-RWF', 'USD-SAR', 'USD-SCR', 'USD-SDG', 'USD-SEK', 'USD-SGD', 'USD-SOS', 'USD-STD', 'USD-SVC', 'USD-SYP', 'USD-SZL', 'USD-THB', 'USD-TJS', 'USD-TMT', 'USD-TND', 'USD-TRY', 'USD-TTD', 'USD-TWD', 'USD-TZS', 'USD-UAH', 'USD-UGX', 'USD-UYU', 'USD-UZS', 'USD-VEF', 'USD-VND', 'USD-VUV', 'USD-XAF', 'USD-XCD', 'USD-XOF', 'USD-XPF', 'USD-YER', 'USD-ZAR', 'USD-ZMK', 'USD-ZWL', 'UYU-BRL', 'UYU-USD', 'VEF-BRL', 'VEF-EUR', 'VEF-USD', 'VND-USD', 'XAG-BRL', 'XAG-EUR', 'XAG-USD', 'XAGG-EUR', 'XAGG-USD', 'XAU-BRL', 'XAU-EUR', 'XAU-USD', 'XBR-USD', 'XCD-GBP', 'XCD-USD', 'XOF-USD', 'XPF-EUR', 'XPF-USD', 'XRP-BRL', 'XRP-EUR', 'XRP-USD', 'ZAR-BRL', 'ZAR-EUR', 'ZAR-USD']
+
+def get_historico_moeda(par_moeda, dias=90):
+    url = f"https://economia.awesomeapi.com.br/json/daily/{par_moeda}/{dias}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        data.sort(key=lambda x: int(x['timestamp']))  # Ordena pelas datas
+        return [
+            {
+                "data": datetime.datetime.fromtimestamp(int(d["timestamp"])).strftime("%d/%m"),
+                "valor": float(d["bid"])
+            }
+            for d in data
+        ]
+    else:
+        return []
+#isso aq tu já sabe, pq foi tu msm q fez Liandro
+def get_cotacao_atual(par_moeda):
+    url = f"https://economia.awesomeapi.com.br/json/last/{par_moeda}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        dados = response.json()
+        chave = par_moeda.replace("-", "")
+        if chave in dados:
+            return f"Valor atual de {par_moeda}: R$ {dados[chave]['bid']}"
+    return "Erro ao buscar cotação atual. Verifique se o par de moedas está correto."
+
+#GERAÇÃO DO GRÁFICO
+
+def gerar_grafico(historico, nome_arquivo):
+    #aq ele vê se o usuário definiu qual a moeda q quer, por isso se n tiver o histórico ele retorna n
+    if not historico:
+        return
+
+    datas = [item["data"] for item in historico]
+    valores = [item["valor"] for item in historico]
+
+    #isso aq é só pra construção visual do gráfica msm
+    plt.figure(figsize=(25, 10))
+    plt.plot(datas, valores, marker="o", linestyle="-", color="blue")
+    plt.title("Histórico de Cotação - Últimos 90 dias")
+    plt.xlabel("Data")
+    plt.ylabel("Valor (R$)")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.grid(True)
+
+    caminho = os.path.join(os.getcwd(), nome_arquivo)
+    plt.savefig(caminho)
+    plt.close()
+    return caminho
+
+    #O BAGULHO DA PÁGINA !!!!!!!, PRA IMPLEMENTAR ALGUMAS COISAS VISUAIS COMO A COR DO FUNDO E O TÍTULO N ESQUECE NNN!!!
+
+def main(page: ft.Page):
+    page.title = "Cotação de Moedas com Gráfico"
+    page.scroll = "auto"
+    page.bgcolor = "#002c41"
+
+    # bagulhos pra ver
+    label_resultado = ft.Text("")
+    imagem_grafico = ft.Image(width=1700, height=800)
+
+    #DROPDOWN tô tentando organizar essa mizera 0-0
+
+    dropdown_moedas = ft.Dropdown(
+        label="Escolha o par de moedas",
+        hint_text="Ex: USD-BRL",
+        width=300,
+        options=[ft.dropdown.Option(m) for m in sorted(LISTA_MOEDAS)],
+    )
+
+    #Isso aq foi pra colocar o DropDown num container pra deixar mais bonito visualmente(mudou quase porra nenhuma) mas fds tá bom assim
+    ft.Container(
+    content=dropdown_moedas,
+    padding=10,
+    border_radius=10,
+    shadow=ft.BoxShadow(blur_radius=8, spread_radius=1),
+)
+    #aq é pra criar o bagulho de pesquisa tlgd, ai o on-submit é praq a função consultar moeda possa utilizar as info que for colocada nesse campo
+    campo_manual = ft.TextField(
+        label="Ou digite o par de moedas",
+        hint_text="Ex: EUR-USD",
+        width=300,
+        on_submit=lambda e: consultar_moeda()
+    )
+
+    #aq nessa função como q funfa? ela pega a variavel par_moeda q justamente é oq vai aparecer no negócio da cotação, 
+    #e coloca que oq vai aparecer lá é oq o cara selecionar no DropDown ou oq o cara pesquisar, q no caso acaba dando prioridade pra oq o cara colocar no campo manual(preguiça de resolver isso agr)
+    #alias se tu perceber eu coloquei o Strip e o Upper no campo manual(q é pra fazer manipulação de string, pra identificação doq o cara digitou) pq ai se o cara digitar:
+    #Brl-Usd ai ele ajusta pra : BRL-USD pegasse a visão? bem acho q eu n preciso explicar mt mais 
+    def consultar_moeda(e=None):
+        par_moeda = campo_manual.value.strip().upper() or dropdown_moedas.value
+        if not par_moeda:
+            label_resultado.value = "Por favor, selecione ou digite um par de moedas."
+            imagem_grafico.visible = False
+        else:
+            label_resultado.value = get_cotacao_atual(par_moeda)
+            historico = get_historico_moeda(par_moeda)
+            if historico:
+                nome_arquivo = f"{par_moeda}_grafico.png"
+                caminho = gerar_grafico(historico, nome_arquivo)
+                imagem_grafico.src = caminho
+                imagem_grafico.visible = True
+            else:
+                imagem_grafico.visible = False
+                label_resultado.value += "\nNão foi possível obter o histórico da moeda."
+        page.update()
+
+    botao_buscar = ft.ElevatedButton("Consultar Cotação", on_click=consultar_moeda)
+
+    page.add(
+        ft.Column([
+            ft.Row([dropdown_moedas, campo_manual]),
+            botao_buscar,
+            label_resultado,
+            imagem_grafico
+        ])
+    )
+
+ft.app(target=main)
