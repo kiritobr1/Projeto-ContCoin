@@ -63,7 +63,7 @@ def gerar_grafico(historico, nome_arquivo):
 def main(page: ft.Page):
     page.title = "Cotação de Moedas com Gráfico"
     page.scroll = "auto"
-    page.bgcolor = "#002c41"
+    page.bgcolor = "#707070"
 
     # bagulhos pra ver
     label_resultado = ft.Text("")
